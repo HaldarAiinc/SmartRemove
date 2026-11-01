@@ -7,7 +7,7 @@
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/eraser.png",
       "sizes": "512x512",
       "type": "image/png"
     }
