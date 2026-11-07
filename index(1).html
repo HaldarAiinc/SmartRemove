@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SmartRemove – Background remover</title>
+<link rel="icon" type="image/x-icon" href="/eraser.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--color-primary-50:#d7ecff;--color-primary-100:#c9dfff;--color-primary-200:#b5cbff;--color-primary-300:#9aadff;--color-primary-400:#7985ff;--color-primary-500:#5f60ff;--color-primary-600:#4d43fe;--color-primary-700:#3d33d3;--color-primary-800:#3124b4;--color-primary-900:#271898;--color-primary-950:#14055f;
+--ink:#1b1b1b;--muted:#6c6c6c;--soft:#adacbe;--line:#eaecf0;--tint:#e0eaff;--tint-2:#eef4fe;
+--shadow-xs:rgba(74,58,255,.1) 0 6px 16px 0;--shadow-sm:rgba(41,30,255,.45) 0 8px 28px 0;
+--radius-md:10px;--radius-lg:16px;--radius-xl:20px;--radius-full:9999px;
+--ok:#16a34a;--err:#d92d3a;
+--font-head:'Anek Latin','Figtree',sans-serif;--font-body:'Figtree',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{background:#fff}
+body{min-height:100vh;color:var(--ink);font:400 16px/1.5 var(--font-body);background:radial-gradient(120% 60% at 50% -10%,var(--tint) 0,rgba(224,234,255,0) 70%) no-repeat,#fff;padding:max(20px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom))}
+.ic{width:1.25em;height:1.25em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:focus-visible{outline:3px solid var(--color-primary-300);outline-offset:2px}
+.wrap{max-width:520px;margin:0 auto}
+.top{display:flex;align-items:center;gap:12px;padding:8px 4px 28px}
+.top svg.logo{width:40px;height:40px;filter:drop-shadow(0 6px 10px rgba(77,67,254,.3))}
+.brand{font:700 1.35rem/1 var(--font-head);letter-spacing:-.01em}
+.pill{margin-left:auto;font-size:.8rem;font-weight:600;color:var(--color-primary-700);background:var(--tint);padding:6px 12px;border-radius:var(--radius-full)}
+h1{font:800 clamp(2.1rem,9vw,2.9rem)/1.02 var(--font-head);letter-spacing:-.025em;padding:0 4px}
+.lead{color:var(--muted);margin:12px 4px 24px;max-width:38ch}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-xl);padding:16px;box-shadow:var(--shadow-xs)}
+.tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;background:var(--tint-2);border-radius:var(--radius-full);padding:4px;margin-bottom:14px}
+.ind{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);background:#fff;border-radius:var(--radius-full);box-shadow:var(--shadow-xs);transition:transform .35s cubic-bezier(.5,1.4,.5,1)}
+.tabs[data-tab=url] .ind{transform:translateX(100%)}
+.tab{position:relative;z-index:1;display:flex;gap:8px;align-items:center;justify-content:center;border:0;background:none;padding:11px;font:600 .95rem var(--font-body);color:var(--muted);cursor:pointer;border-radius:var(--radius-full);transition:color .2s}
+.tab[aria-selected=true]{color:var(--color-primary-700)}
+.drop{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:34px 20px;border:2px dashed var(--color-primary-200);border-radius:var(--radius-lg);background:var(--tint-2);cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.drop:hover,.drop.over,.drop:focus-within{background:var(--color-primary-50);border-color:var(--color-primary-500)}
+.drop.over{transform:scale(1.015)}
+.orb{position:relative;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:#fff;color:var(--color-primary-600);box-shadow:var(--shadow-xs);margin-bottom:8px}
+.orb .ic{width:28px;height:28px;transition:transform .3s}
+.orb::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid var(--color-primary-400);animation:ring 2.4s ease-out infinite}
+.drop.over .orb .ic{transform:translateY(-4px)}
+@keyframes ring{from{transform:scale(1);opacity:.7}to{transform:scale(1.6);opacity:0}}
+.drop b{font:700 1.1rem var(--font-head)}
+.drop small{color:var(--muted);font-size:.9rem}
+.field{position:relative}
+.field input{width:100%;padding:16px 48px 16px 16px;border:1.5px solid var(--line);border-radius:var(--radius-lg);font:500 1rem var(--font-body);color:var(--ink);background:#fff;transition:border-color .2s,box-shadow .2s}
+.field input::placeholder{color:var(--soft)}
+.field input:focus{outline:0;border-color:var(--color-primary-600);box-shadow:0 0 0 4px rgba(77,67,254,.15)}
+.hint{color:var(--muted);font-size:.9rem;margin:10px 4px 2px}
+.ust{position:absolute;right:14px;top:50%;width:24px;height:24px;margin-top:-12px;border-radius:50%;display:grid;place-items:center;color:#fff;transform:scale(.4);opacity:0;transition:transform .35s cubic-bezier(.3,1.6,.5,1),opacity .2s}
+.ust.on{transform:scale(1);opacity:1}
+.ust.ok{background:var(--ok)}.ust.bad{background:var(--err)}
+.ust .ic{width:14px;height:14px;stroke-width:3.5}
+.spin{display:inline-block;width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:rot .8s linear infinite}
+.ust .spin{width:100%;height:100%;border-color:var(--line);border-top-color:var(--color-primary-600)}
+@keyframes rot{to{transform:rotate(360deg)}}
+.chip{display:flex;align-items:center;gap:10px;background:var(--tint-2);border-radius:var(--radius-full);padding:6px 6px 6px 14px;margin-bottom:12px;color:var(--color-primary-800);font-weight:600;font-size:.9rem}
+.chip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip button{display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:50%;background:#fff;color:var(--ink);cursor:pointer;transition:background .2s,transform .2s}
+.chip button:hover{background:var(--color-primary-100);transform:rotate(90deg)}
+.frame{--p:100%;--ar:1.2;--bgc:#fff;--ck:1;position:relative;width:min(100%,calc(58vh*var(--ar)));aspect-ratio:var(--ar);margin:0 auto;border-radius:var(--radius-lg);overflow:hidden;background:var(--bgc);isolation:isolate}
+.frame::before{content:'';position:absolute;inset:0;opacity:var(--ck);background:repeating-conic-gradient(#e9ecf5 0 25%,#fff 0 50%) 0 0/20px 20px;z-index:-1}
+.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+.frame.cmp #pre{clip-path:inset(0 calc(100% - var(--p)) 0 0)}
+.scan{position:absolute;left:0;right:0;height:90px;top:-90px;background:linear-gradient(180deg,rgba(77,67,254,0),rgba(77,67,254,.35));border-bottom:2px solid var(--color-primary-400);box-shadow:0 8px 24px rgba(77,67,254,.5);animation:scan 1.8s cubic-bezier(.6,0,.4,1) infinite}
+@keyframes scan{to{top:100%}}
+.frame.busy #pre{animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.7}}
+.handle{position:absolute;top:0;bottom:0;left:var(--p);width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 0 1px rgba(27,27,27,.12);pointer-events:none}
+.handle i{position:absolute;top:50%;left:50%;width:40px;height:40px;margin:-20px;border-radius:50%;background:#fff;color:var(--color-primary-600);display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+#cmp{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0;-webkit-appearance:none;appearance:none}
+.tag{position:absolute;bottom:10px;font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:var(--radius-full);background:rgba(27,27,27,.72);color:#fff;pointer-events:none}
+.tag.l{left:10px}.tag.r{right:10px}
+.swatches{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;color:var(--muted);font-size:.9rem;font-weight:500}
+.sw{position:relative;width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line);cursor:pointer;background:var(--c);overflow:hidden;transition:transform .2s,box-shadow .2s}
+.sw.t{background:repeating-conic-gradient(#d9dce8 0 25%,#fff 0 50%) 0 0/10px 10px}
+.sw:hover{transform:scale(1.12)}
+.sw[aria-pressed=true]{box-shadow:0 0 0 2.5px var(--color-primary-600)}
+.status{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;color:var(--color-primary-700);font-weight:600}
+.alert{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:12px 14px;border-radius:var(--radius-md);background:#fff1f2;border:1px solid #ffd3d6;color:#a3141f;font-weight:500;font-size:.95rem;animation:shake .4s}
+.alert .ic{margin-top:2px}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.actions{display:grid;gap:10px;margin-top:16px}
+.btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px 20px;border:0;border-radius:var(--radius-full);font:700 1.02rem var(--font-body);color:#fff;background:var(--color-primary-600);box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .2s,background .2s,box-shadow .2s}
+.btn:hover:not(:disabled){background:var(--color-primary-700);transform:translateY(-2px)}
+.btn:active:not(:disabled){transform:translateY(0) scale(.98)}
+.btn:disabled{opacity:.75;cursor:progress;box-shadow:none}
+.btn::after{content:'';position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg)}
+.btn:hover:not(:disabled)::after{left:130%;transition:left .7s}
+.btn.ghost{background:var(--tint);color:var(--color-primary-800);box-shadow:none}
+.btn.ghost:hover{background:var(--color-primary-100)}
+.btn.done-pop .ic{animation:pop .5s cubic-bezier(.3,1.8,.5,1)}
+@keyframes pop{from{transform:scale(0)}}
+.perks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;list-style:none;margin:22px 0 14px}
+.perks li{display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:500;color:var(--muted);padding:6px 12px;border:1px solid var(--line);border-radius:var(--radius-full)}
+.perks .ic{width:15px;height:15px;color:var(--color-primary-600)}
+footer{text-align:center;color:var(--soft);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-wand" viewBox="0 0 24 24"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 3v4M17 5h4M5 17v4M3 19h4"/></symbol>
+<symbol id="i-redo" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></symbol>
+<symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
+<symbol id="i-arrows" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7zM2 12l10 5 10-5M2 17l10 5 10-5"/></symbol>
+</svg>
+
+<div class="wrap">
+<header class="top">
+<svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5f60ff"/><stop offset="1" stop-color="#3124b4"/></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#g)"/><g transform="rotate(-40 20 21)"><rect x="9" y="15" width="22" height="12" rx="3.5" fill="#fff"/><rect x="9" y="15" width="9" height="12" rx="3.5" fill="#b5cbff"/></g><path d="M31 6l1.2 2.8L35 10l-2.8 1.2L31 14l-1.2-2.8L27 10l2.8-1.2z" fill="#fff"/></svg>
+<span class="brand">SmartRemove</span>
+<span class="pill">Free to try</span>
+</header>
+
+<h1>Cut out any background in seconds</h1>
+<p class="lead">Add a photo or paste a link. You get a clean, transparent PNG.</p>
+
+<main class="card" id="app" data-state="idle">
+<div class="tabs" id="tabs" data-tab="upload" role="tablist" data-show="idle">
+<span class="ind"></span>
+<button class="tab" role="tab" aria-selected="true" data-tab="upload"><svg class="ic"><use href="#i-upload"/></svg>Upload</button>
+<button class="tab" role="tab" aria-selected="false" data-tab="url"><svg class="ic"><use href="#i-link"/></svg>Image link</button>
+</div>
+
+<div id="pane-upload" data-show="idle">
+<label class="drop" id="drop" for="file">
+<span class="orb"><svg class="ic"><use href="#i-upload"/></svg></span>
+<b>Choose a photo</b>
+<small>Drop it here, or paste with Ctrl+V</small>
+<input class="sr" type="file" id="file" accept="image/*">
+</label>
+</div>
+
+<div id="pane-url" hidden>
+<div class="field">
+<input type="url" id="url" placeholder="https://example.com/photo.jpg" aria-label="Image link" autocomplete="off" inputmode="url">
+<span class="ust" id="ust"></span>
+</div>
+<p class="hint">Paste a direct link to an image. Some sites block previews; if yours does, upload the file instead.</p>
+</div>
+
+<div class="chip" data-show="ready loading done error" hidden>
+<svg class="ic"><use href="#i-img"/></svg><span id="chipName">image</span>
+<button type="button" id="clear" aria-label="Remove this image"><svg class="ic"><use href="#i-x"/></svg></button>
+</div>
+
+<section data-show="ready loading done error" hidden>
+<div class="frame" id="frame">
+<img id="out" alt="Image with background removed" hidden>
+<img id="pre" alt="Original image">
+<div class="scan" id="scan" hidden></div>
+<div class="handle" id="handle" hidden><i><svg class="ic"><use href="#i-arrows"/></svg></i></div>
+<span class="tag l" id="tagL" hidden>Before</span><span class="tag r" id="tagR" hidden>After</span>
+<input type="range" id="cmp" min="0" max="100" value="50" aria-label="Compare before and after" hidden>
+</div>
+<div class="swatches" id="swatches" hidden>
+<span>Background</span>
+<button class="sw t" data-bg="transparent" aria-pressed="true" aria-label="Transparent"></button>
+<button class="sw" style="--c:#ffffff" data-bg="#ffffff" aria-pressed="false" aria-label="White"></button>
+<button class="sw" style="--c:#e0eaff" data-bg="#e0eaff" aria-pressed="false" aria-label="Light blue"></button>
+<button class="sw" style="--c:#4d43fe" data-bg="#4d43fe" aria-pressed="false" aria-label="Indigo"></button>
+<button class="sw" style="--c:#1b1b1b" data-bg="#1b1b1b" aria-pressed="false" aria-label="Black"></button>
+</div>
+</section>
+
+<p class="status" id="status" data-show="loading" aria-live="polite" hidden></p>
+<div class="alert" id="alert" role="alert" hidden><svg class="ic"><use href="#i-alert"/></svg><span id="errTxt"></span></div>
+
+<div class="actions">
+<button class="btn" id="go" data-show="ready" hidden><svg class="ic"><use href="#i-wand"/></svg>Remove background</button>
+<button class="btn" disabled data-show="loading" hidden><i class="spin"></i>Removing background</button>
+<button class="btn done-pop" id="dl" data-show="done" hidden><svg class="ic"><use href="#i-down"/></svg>Download PNG</button>
+<button class="btn" id="retry" data-show="error" hidden><svg class="ic"><use href="#i-redo"/></svg>Try again</button>
+<button class="btn ghost" id="again" data-show="done error" hidden>Start over</button>
+</div>
+</main>
+
+<ul class="perks">
+<li><svg class="ic"><use href="#i-check"/></svg>Transparent PNG</li>
+<li><svg class="ic"><use href="#i-layers"/></svg>Pick a new background</li>
+<li><svg class="ic"><use href="#i-arrows"/></svg>Before and after slider</li>
+</ul>
+<footer>Background removal by remove.bg</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+// NOTE: this key is visible to anyone who views the page source. Rotate it and move the call to a server-side proxy when you can.
+const API_KEY='om4p62zDwpb9dLEBN5kWdCC2';
+const app=$('#app'),frame=$('#frame'),pre=$('#pre'),out=$('#out'),cmp=$('#cmp'),fileIn=$('#file'),urlIn=$('#url'),ust=$('#ust');
+const S={tab:'upload',file:null,url:'',pending:false,state:'idle',blob:null,bg:'transparent',t:0};
+const MSG=['Looking at your image','Finding the edges','Cutting out the subject','Cleaning up the details'];
+const ico=n=>`<svg class="ic"><use href="#i-${n}"/></svg>`;
+
+function setState(s){
+  S.state=s;app.dataset.state=s;
+  $$('[data-show]').forEach(e=>e.hidden=!e.dataset.show.split(' ').includes(s));
+  if(s!=='idle')$('#pane-url').hidden=true;
+  else{$('#pane-url').hidden=S.tab!=='url';$('#pane-upload').hidden=S.tab!=='upload'}
+  const done=s==='done';
+  out.hidden=!done;frame.classList.toggle('cmp',done);frame.classList.toggle('busy',s==='loading');
+  ['handle','cmp','tagL','tagR','swatches'].forEach(i=>$('#'+i).hidden=!done);
+  $('#scan').hidden=s!=='loading';
+  $('#alert').hidden=true;
+  clearInterval(S.t);
+  if(s==='loading'){let i=0;$('#status').textContent=MSG[0];S.t=setInterval(()=>$('#status').textContent=MSG[++i%MSG.length],1700)}
+}
+function showErr(m){$('#errTxt').textContent=m;$('#alert').hidden=false}
+function setUst(k){
+  ust.className='ust';
+  if(k==='load'){ust.innerHTML='<i class="spin"></i>';ust.classList.add('on')}
+  else if(k==='ok'){ust.innerHTML=ico('check');ust.classList.add('on','ok')}
+  else if(k==='bad'){ust.innerHTML=ico('x');ust.classList.add('on','bad')}
+}
+function switchTab(t){
+  if(S.state!=='idle'||S.tab===t)return;
+  S.tab=t;$('#tabs').dataset.tab=t;
+  $$('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
+  $('#pane-upload').hidden=t!=='upload';$('#pane-url').hidden=t!=='url';
+  $('#alert').hidden=true;
+  if(t==='url')setTimeout(()=>urlIn.focus(),120);
+}
+function reset(){
+  S.file=null;S.url='';S.pending=false;fileIn.value='';urlIn.value='';
+  pre.removeAttribute('src');out.removeAttribute('src');setUst('');
+  S.bg='transparent';setBg('transparent');
+  setState('idle');
+}
+function take(f){
+  if(!f||!f.type.startsWith('image/')){showErr('That file isn’t an image. Choose a JPG, PNG or WEBP.');return}
+  S.file=f;S.pending=true;$('#chipName').textContent=f.name;
+  pre.src=URL.createObjectURL(f);
+}
+pre.onload=()=>{
+  frame.style.setProperty('--ar',pre.naturalWidth/pre.naturalHeight);
+  if(!S.pending)return;
+  S.pending=false;
+  if(S.tab==='url'){setUst('ok');try{$('#chipName').textContent=new URL(S.url).hostname}catch{}}
+  setState('ready');
+};
+pre.onerror=()=>{
+  if(!S.pending)return;
+  S.pending=false;
+  if(S.tab==='url'){setUst('bad');showErr('We couldn’t load that link. Check the address, or upload the file instead.')}
+  else showErr('We couldn’t read that image. Try a different file.');
+};
+
+// input handling
+fileIn.onchange=e=>take(e.target.files[0]);
+const drop=$('#drop');
+['dragenter','dragover'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(n=>drop.addEventListener(n,()=>drop.classList.remove('over')));
+drop.addEventListener('drop',e=>{e.preventDefault();take(e.dataTransfer.files[0])});
+addEventListener('paste',e=>{
+  const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/'));
+  if(f&&S.state==='idle'){switchTab('upload');take(f)}
+});
+urlIn.addEventListener('input',()=>{
+  clearTimeout(urlIn._t);$('#alert').hidden=true;
+  const v=urlIn.value.trim();
+  if(!v){setUst('');return}
+  setUst('load');
+  urlIn._t=setTimeout(()=>{
+    if(/^https?:\/\//i.test(v)){S.url=v;S.pending=true;pre.src=v}
+    else{setUst('bad');showErr('Enter a link that starts with http:// or https://')}
+  },500);
+});
+$$('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+// remove background
+async function run(){
+  setState('loading');
+  try{
+    const fd=new FormData();
+    S.tab==='upload'?fd.append('image_file',S.file):fd.append('image_url',S.url);
+    const r=await fetch('https://api.remove.bg/v1.0/removebg',{method:'POST',headers:{'X-Api-Key':API_KEY},body:fd});
+    if(!r.ok){
+      let m=`The service returned an error (${r.status}).`;
+      try{m=(await r.json()).errors[0].title||m}catch{}
+      throw new Error(m);
+    }
+    const b=await r.blob();
+    if(S.blob)URL.revokeObjectURL(S.blob);
+    S.blob=URL.createObjectURL(b);
+    out.src=S.blob;
+    await new Promise(res=>{out.onload=res;out.onerror=res});
+    setState('done');reveal();
+  }catch(e){setState('error');showErr(e.message||'Something went wrong. Try again.')}
+}
+function reveal(){
+  let p=100;
+  const f=()=>{p-=(p-50)*.1;frame.style.setProperty('--p',p+'%');cmp.value=p;if(p-50>.3)requestAnimationFrame(f)};
+  f();
+}
+cmp.oninput=()=>frame.style.setProperty('--p',cmp.value+'%');
+
+// backgrounds + download
+function setBg(c){
+  S.bg=c;
+  frame.style.setProperty('--bgc',c==='transparent'?'#fff':c);
+  frame.style.setProperty('--ck',c==='transparent'?1:0);
+  $$('.sw').forEach(b=>b.setAttribute('aria-pressed',b.dataset.bg===c));
+}
+$$('.sw').forEach(b=>b.onclick=()=>setBg(b.dataset.bg));
+async function download(){
+  let href=S.blob;
+  if(S.bg!=='transparent'){
+    const c=document.createElement('canvas');c.width=out.naturalWidth;c.height=out.naturalHeight;
+    const x=c.getContext('2d');x.fillStyle=S.bg;x.fillRect(0,0,c.width,c.height);x.drawImage(out,0,0);
+    href=await new Promise(r=>c.toBlob(b=>r(URL.createObjectURL(b)),'image/png'));
+  }
+  const a=document.createElement('a');a.href=href;a.download='smartremove.png';a.click();
+}
+
+$('#go').onclick=run;$('#retry').onclick=run;$('#dl').onclick=download;
+$('#again').onclick=reset;$('#clear').onclick=reset;
+setState('idle');
+</script>
+</body>
+</html>
